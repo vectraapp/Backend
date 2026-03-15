@@ -1,0 +1,325 @@
+# ============================================
+# SENSITIVE DATA - NEVER COMMIT
+# ============================================
+
+# Environment Variables
+.env
+.env.*
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+.env.development
+.env.staging
+
+# API Keys & Secrets
+config/secrets.js
+config/keys.js
+secrets/
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+
+# Service Account Files
+serviceAccountKey.json
+firebase-adminsdk*.json
+google-credentials.json
+aws-credentials.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.json
+db-backup/
+dumps/
+
+# ============================================
+# LOGS
+# ============================================
+
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+combined.log
+error.log
+
+# ============================================
+# DEPENDENCIES
+# ============================================
+
+node_modules
+jspm_packages/
+bower_components
+
+# ============================================
+# BUILD OUTPUTS
+# ============================================
+
+# Web (Vite)
+dist
+dist-ssr
+build
+.next
+out
+
+# Expo / React Native
+.expo
+.expo-shared
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+*.orig.*
+web-build/
+ios/build/
+android/app/build/
+android/.gradle
+
+# ============================================
+# PLATFORM-SPECIFIC
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# IDE / EDITOR
+# ============================================
+
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.code-workspace
+
+# JetBrains (WebStorm, IntelliJ, etc.)
+.idea
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+out/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+*~
+tags
+[._]*.un~
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ============================================
+# MOBILE SPECIFIC
+# ============================================
+
+# iOS
+ios/Pods/
+ios/.xcode.env.local
+ios/Podfile.lock
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+*.hmap
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+xcuserdata/
+
+# Android
+android/.gradle/
+android/app/release/
+android/app/debug/
+android/captures/
+*.apk
+*.aab
+local.properties
+*.hprof
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# ============================================
+# CERTIFICATES & SIGNING
+# ============================================
+
+# iOS Certificates
+*.p12
+*.mobileprovision
+*.certSigningRequest
+
+# Android Signing
+*.jks
+*.keystore
+key.properties
+keystore.properties
+release.keystore
+debug.keystore
+
+# SSL/TLS Certificates
+*.crt
+*.cer
+*.der
+*.pfx
+
+# ============================================
+# CACHE & TEMP FILES
+# ============================================
+
+*.local
+.cache
+.parcel-cache
+.vite
+.turbo
+.npm
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Test Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.backup
+*~.nib
+tmp/
+temp/
+
+# ============================================
+# DEPLOYMENT
+# ============================================
+
+.vercel
+.netlify
+.firebase
+.gcloud
+
+# ============================================
+# USER DATA (if testing locally)
+# ============================================
+
+# Uploads directory (if storing locally during dev)
+uploads/
+user-uploads/
+downloads/
+
+# ============================================
+# DOCUMENTATION BUILD
+# ============================================
+
+docs/_build/
+site/
+
+# ============================================
+# PACKAGE MANAGER
+# ============================================
+
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Optional: Uncomment to track lock files
+# !yarn.lock
+# !package-lock.json
+# !pnpm-lock.yaml
+
+# ============================================
+# MISC
+# ============================================
+
+.env.backup
+.DS_Store?
+Icon?
+._*
+*.seed
+*.pid
+*.pid.lock
+
+# ============================================
+# CUSTOM VECTRA-SPECIFIC
+# ============================================
+
+# Analytics data exports
+analytics-exports/
+reports/
+
+# Encrypted downloads (if storing locally)
+app_encrypted_storage/
+
+# Admin seeds (if they contain real data)
+seeds/production/
+
+# Backup files
+backups/
+*.sql
+*.dump
+
+# Test data with PII
+test-data/real/
