@@ -146,7 +146,7 @@ async function signIn(req, res, next) {
 }
 
 /**
- * Sign in with Google
+ * Sign in with Google (web redirect flow)
  */
 async function signInWithGoogle(req, res, next) {
   try {
@@ -168,6 +168,87 @@ async function signInWithGoogle(req, res, next) {
       data: {
         url: data.url
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Exchange Google ID token for a Supabase session (mobile flow)
+ * The mobile app uses expo-auth-session to get the Google ID token,
+ * then sends it here to get a Supabase session back.
+ */
+async function exchangeGoogleToken(req, res, next) {
+  try {
+    const { idToken, accessToken } = req.body;
+
+    if (!idToken) {
+      throw new ApiError(400, 'Google ID token is required');
+    }
+
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+      access_token: accessToken,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    // Update last login
+    await supabaseAdmin
+      .from('users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', data.user.id)
+      .catch(() => {});
+
+    // Get user profile
+    const { data: profile } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          ...data.user,
+          profile,
+        },
+        session: data.session,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Resend email verification link
+ */
+async function resendVerification(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new ApiError(400, 'Email is required');
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification email sent'
     });
   } catch (error) {
     next(error);
@@ -300,6 +381,8 @@ module.exports = {
   signUp,
   signIn,
   signInWithGoogle,
+  exchangeGoogleToken,
+  resendVerification,
   signOut,
   getCurrentUser,
   refreshSession,

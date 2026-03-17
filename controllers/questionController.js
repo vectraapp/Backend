@@ -488,6 +488,69 @@ async function getAllQuestions(req, res, next) {
   }
 }
 
+/**
+ * Get repeated questions analysis for a course
+ */
+async function getRepeatedQuestions(req, res, next) {
+  try {
+    const { courseCode } = req.params;
+
+    if (!courseCode) {
+      throw new ApiError(400, 'courseCode is required');
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('past_questions')
+      .select('academic_session, question_type')
+      .eq('course_code', courseCode)
+      .eq('status', 'approved');
+
+    if (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    const questions = data || [];
+    const total = questions.length;
+
+    // Group by session
+    const sessionMap = {};
+    questions.forEach(q => {
+      const session = q.academic_session || 'Unknown';
+      sessionMap[session] = (sessionMap[session] || 0) + 1;
+    });
+
+    const by_session = Object.entries(sessionMap)
+      .map(([session, count]) => ({ session, count }))
+      .sort((a, b) => b.session.localeCompare(a.session));
+
+    // Group by type
+    const typeMap = {};
+    questions.forEach(q => {
+      const type = q.question_type || 'Unknown';
+      typeMap[type] = (typeMap[type] || 0) + 1;
+    });
+
+    const by_type = Object.entries(typeMap)
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const years_available = by_session.map(s => s.session);
+
+    res.json({
+      success: true,
+      data: {
+        course_code: courseCode,
+        total_questions: total,
+        by_session,
+        by_type,
+        years_available
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getQuestions,
   getQuestion,
@@ -498,5 +561,6 @@ module.exports = {
   approveQuestion,
   rejectQuestion,
   deleteQuestion,
-  getAllQuestions
+  getAllQuestions,
+  getRepeatedQuestions
 };

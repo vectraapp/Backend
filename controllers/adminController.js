@@ -324,6 +324,73 @@ async function expireSubscriptions(req, res, next) {
   }
 }
 
+/**
+ * Get general platform analytics
+ */
+async function getAnalytics(req, res, next) {
+  try {
+    // Total users
+    const { count: total_users, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true });
+
+    if (usersError) {
+      throw new ApiError(400, usersError.message);
+    }
+
+    // Total approved questions
+    const { count: total_questions, error: questionsError } = await supabaseAdmin
+      .from('past_questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'approved');
+
+    if (questionsError) {
+      throw new ApiError(400, questionsError.message);
+    }
+
+    // Total lectures
+    const { count: total_lectures, error: lecturesError } = await supabaseAdmin
+      .from('lectures')
+      .select('*', { count: 'exact', head: true });
+
+    if (lecturesError) {
+      throw new ApiError(400, lecturesError.message);
+    }
+
+    // Total uploads (optional — skip if table doesn't exist)
+    let total_uploads = 0;
+    const { count: uploadsCount, error: uploadsError } = await supabaseAdmin
+      .from('uploads')
+      .select('*', { count: 'exact', head: true });
+
+    if (!uploadsError) {
+      total_uploads = uploadsCount || 0;
+    }
+
+    // Signups in last 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: signups_last_7_days, error: signupsError } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo);
+
+    res.json({
+      success: true,
+      data: {
+        total_users: total_users || 0,
+        total_questions: total_questions || 0,
+        total_lectures: total_lectures || 0,
+        total_uploads,
+        signups_last_7_days: signupsError ? 0 : (signups_last_7_days || 0),
+        active_today: 0,
+        questions_viewed_today: 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboardStats,
   getActivityLogs,
@@ -331,5 +398,6 @@ module.exports = {
   getRevenueAnalytics,
   getUserAnalytics,
   getContentAnalytics,
-  expireSubscriptions
+  expireSubscriptions,
+  getAnalytics
 };

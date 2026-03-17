@@ -1,6 +1,5 @@
 /**
  * Vectra - Authentication Routes
- * Email/password authentication only (Google OAuth disabled for MVP)
  */
 
 const express = require('express');
@@ -11,6 +10,9 @@ const { authenticate } = require('../middleware/auth');
 // Public routes
 router.post('/signup', authController.signUp);
 router.post('/signin', authController.signIn);
+router.post('/google', authController.exchangeGoogleToken);       // Mobile: exchange Google ID token
+router.post('/google/web', authController.signInWithGoogle);      // Web: get OAuth redirect URL
+router.post('/verify/resend', authController.resendVerification); // Resend verification email
 router.post('/password/reset', authController.requestPasswordReset);
 
 // Protected routes

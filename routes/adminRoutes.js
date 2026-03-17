@@ -16,6 +16,7 @@ router.get('/dashboard', adminController.getDashboardStats);
 router.get('/activity-logs', adminController.getActivityLogs);
 
 // Analytics
+router.get('/analytics', adminController.getAnalytics);
 router.get('/analytics/revenue', adminController.getRevenueAnalytics);
 router.get('/analytics/users', adminController.getUserAnalytics);
 router.get('/analytics/content', adminController.getContentAnalytics);

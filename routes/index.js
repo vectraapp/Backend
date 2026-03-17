@@ -16,6 +16,10 @@ const shareRoutes = require('./shareRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const courseRoutes = require('./courseRoutes');
 const groupRoutes = require('./groupRoutes');
+const bookmarkRoutes = require('./bookmarkRoutes');
+const streakRoutes = require('./streakRoutes');
+const examRoutes = require('./examRoutes');
+const recentlyViewedRoutes = require('./recentlyViewedRoutes');
 
 function setupRoutes(app) {
   // API versioning
@@ -36,6 +40,10 @@ function setupRoutes(app) {
   app.use(`${apiPrefix}/uploads`, uploadRoutes);
   app.use(`${apiPrefix}/courses`, courseRoutes);
   app.use(`${apiPrefix}/groups`, groupRoutes);
+  app.use(`${apiPrefix}/bookmarks`, bookmarkRoutes);
+  app.use(`${apiPrefix}/streaks`, streakRoutes);
+  app.use(`${apiPrefix}/exams`, examRoutes);
+  app.use(`${apiPrefix}/recently-viewed`, recentlyViewedRoutes);
 
   // Health check
   app.get('/health', (req, res) => {
@@ -66,7 +74,11 @@ function setupRoutes(app) {
         shares: `${apiPrefix}/shares`,
         uploads: `${apiPrefix}/uploads`,
         courses: `${apiPrefix}/courses`,
-        groups: `${apiPrefix}/groups`
+        groups: `${apiPrefix}/groups`,
+        bookmarks: `${apiPrefix}/bookmarks`,
+        streaks: `${apiPrefix}/streaks`,
+        exams: `${apiPrefix}/exams`,
+        recently_viewed: `${apiPrefix}/recently-viewed`
       }
     });
   });

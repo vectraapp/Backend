@@ -27,6 +27,7 @@ const upload = multer({
 
 // Public/Optional auth routes
 router.get('/', optionalAuth, questionController.getQuestions);
+router.get('/repeated/:courseCode', optionalAuth, questionController.getRepeatedQuestions);
 router.get('/:id', optionalAuth, questionController.getQuestion);
 
 // Contributor routes
