@@ -18,6 +18,7 @@ const courseRoutes = require('./courseRoutes');
 const groupRoutes = require('./groupRoutes');
 const bookmarkRoutes = require('./bookmarkRoutes');
 const streakRoutes = require('./streakRoutes');
+const leaderboardRoutes = require('./leaderboardRoutes');
 const examRoutes = require('./examRoutes');
 const recentlyViewedRoutes = require('./recentlyViewedRoutes');
 
@@ -42,6 +43,7 @@ function setupRoutes(app) {
   app.use(`${apiPrefix}/groups`, groupRoutes);
   app.use(`${apiPrefix}/bookmarks`, bookmarkRoutes);
   app.use(`${apiPrefix}/streaks`, streakRoutes);
+  app.use(`${apiPrefix}/leaderboard`, leaderboardRoutes);
   app.use(`${apiPrefix}/exams`, examRoutes);
   app.use(`${apiPrefix}/recently-viewed`, recentlyViewedRoutes);
 
@@ -77,6 +79,7 @@ function setupRoutes(app) {
         groups: `${apiPrefix}/groups`,
         bookmarks: `${apiPrefix}/bookmarks`,
         streaks: `${apiPrefix}/streaks`,
+        leaderboard: `${apiPrefix}/leaderboard`,
         exams: `${apiPrefix}/exams`,
         recently_viewed: `${apiPrefix}/recently-viewed`
       }
