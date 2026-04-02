@@ -9,10 +9,11 @@ const { authenticate } = require('../middleware/auth');
 
 // Public routes
 router.post('/signup', authController.signUp);
+router.post('/verify-otp', authController.verifyOtp);             // Verify 6-digit OTP after signup
 router.post('/signin', authController.signIn);
 router.post('/google', authController.exchangeGoogleToken);       // Mobile: exchange Google ID token
 router.post('/google/web', authController.signInWithGoogle);      // Web: get OAuth redirect URL
-router.post('/verify/resend', authController.resendVerification); // Resend verification email
+router.post('/verify/resend', authController.resendVerification); // Resend OTP code
 router.post('/password/reset', authController.requestPasswordReset);
 
 // Protected routes

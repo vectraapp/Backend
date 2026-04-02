@@ -1,5 +1,5 @@
 /**
- * PastQuest - Cloudinary Configuration
+ * Vectra - Cloudinary Configuration
  */
 
 const cloudinary = require('cloudinary').v2;

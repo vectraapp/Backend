@@ -49,16 +49,18 @@ const upload = multer({
 router.use(authenticate);
 
 // User upload routes
-router.post('/question', upload.single('file'), uploadController.uploadPastQuestion);
+router.post('/question', upload.single('file'), uploadController.uploadVectraion);
 router.post('/textbook', upload.single('file'), uploadController.uploadTextbook);
 router.get('/my-uploads', uploadController.getMyUploads);
 router.get('/published', uploadController.getPublishedUploads);
 router.get('/:id', uploadController.getUpload);
 
 // Admin review routes
+router.get('/admin/all', requireAdmin, uploadController.getAllUploads);
 router.get('/admin/pending', requireAdmin, uploadController.getPendingUploads);
+router.get('/admin/stats', requireAdmin, uploadController.getUploadStats);
 router.post('/admin/:id/approve', requireAdmin, uploadController.approveUpload);
 router.post('/admin/:id/reject', requireAdmin, uploadController.rejectUpload);
-router.get('/admin/stats', requireAdmin, uploadController.getUploadStats);
+router.delete('/admin/:id', requireAdmin, uploadController.deleteUpload);
 
 module.exports = router;

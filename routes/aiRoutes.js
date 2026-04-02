@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - AI Routes
+ * Vectra/Vectra - AI Routes
  */
 
 const express = require('express');

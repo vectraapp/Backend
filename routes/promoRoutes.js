@@ -1,5 +1,5 @@
 /**
- * PastQuest - Promo Code Routes
+ * Vectra - Promo Code Routes
  */
 
 const express = require('express');

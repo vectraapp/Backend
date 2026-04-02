@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - Audio & Photo Upload Middleware
+ * Vectra/Vectra - Audio & Photo Upload Middleware
  */
 
 const multer = require('multer');

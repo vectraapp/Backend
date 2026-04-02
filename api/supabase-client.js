@@ -1,5 +1,5 @@
 /**
- * PastQuest - Supabase Client Setup
+ * Vectra - Supabase Client Setup
  *
  * This file provides the Supabase client configuration for use in
  * the backend API and scripts.

@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - Claude AI Note Structuring Service
+ * Vectra/Vectra - Claude AI Note Structuring Service
  */
 
 /**

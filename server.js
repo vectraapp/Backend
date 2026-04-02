@@ -1,5 +1,5 @@
 /**
- * PastQuest - Main Server Entry Point
+ * Vectra - Main Server Entry Point
  */
 
 require('dotenv').config();
@@ -105,7 +105,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔════════════════════════════════════════════════════╗
 ║                                                    ║
-║   🎓 PastQuest API Server                          ║
+║   🎓 Vectra API Server                             ║
 ║                                                    ║
 ║   Server running on port ${PORT}                      ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                    ║

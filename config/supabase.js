@@ -1,5 +1,5 @@
 /**
- * PastQuest - Supabase Configuration
+ * Vectra - Supabase Configuration
  */
 
 const { createClient } = require('@supabase/supabase-js');

@@ -1,5 +1,5 @@
 /**
- * PastQuest - Paystack Utility Functions
+ * Vectra - Paystack Utility Functions
  */
 
 const axios = require('axios');

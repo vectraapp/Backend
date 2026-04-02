@@ -1,5 +1,5 @@
 /**
- * PastQuest - Withdrawal Routes
+ * Vectra - Withdrawal Routes
  */
 
 const express = require('express');

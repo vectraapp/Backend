@@ -1,5 +1,5 @@
 /**
- * PastQuest - Payment Controller
+ * Vectra - Payment Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');

@@ -1,6 +1,6 @@
-# PastQuest Backend
+# Vectra Backend
 
-Complete Express.js + Supabase backend for the PastQuest past questions platform.
+Complete Express.js + Supabase backend for the Vectra past questions platform.
 
 ## Architecture Overview
 

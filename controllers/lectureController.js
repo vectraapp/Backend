@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - Lecture Controller
+ * Vectra/Vectra - Lecture Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');

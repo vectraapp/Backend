@@ -1,5 +1,5 @@
 /**
- * PastQuest - Cloudinary Utility Functions
+ * Vectra - Cloudinary Utility Functions
  */
 
 const cloudinary = require('../config/cloudinary');

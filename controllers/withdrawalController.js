@@ -1,5 +1,5 @@
 /**
- * PastQuest - Withdrawal Controller
+ * Vectra - Withdrawal Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');
@@ -219,7 +219,7 @@ async function processWithdrawal(req, res, next) {
     const transferResult = await paystack.initiateTransfer({
       amount: withdrawal.net_amount,
       recipientCode: recipientResult.data.recipient_code,
-      reason: `PastQuest withdrawal - ${id}`,
+      reason: `Vectra withdrawal - ${id}`,
       reference
     });
 

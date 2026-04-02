@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - PDF Generation Service
+ * Vectra/Vectra - PDF Generation Service
  */
 
 const PDFDocument = require('pdfkit');

@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - OpenAI Whisper Transcription Service
+ * Vectra/Vectra - OpenAI Whisper Transcription Service
  */
 
 const fs = require('fs');

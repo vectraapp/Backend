@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - Lecture Routes
+ * Vectra/Vectra - Lecture Routes
  */
 
 const express = require('express');

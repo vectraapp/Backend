@@ -1,5 +1,5 @@
 /**
- * PastQuest - Data Controller
+ * Vectra - Data Controller
  * Handles universities, faculties, departments, courses
  */
 
@@ -73,6 +73,7 @@ async function getFaculties(req, res, next) {
       .select('*')
       .eq('university_id', universityId)
       .eq('status', 'active')
+      .eq('is_published', true)
       .order('name');
 
     if (error) {
@@ -130,6 +131,7 @@ async function getDepartments(req, res, next) {
       .select('*')
       .eq('faculty_id', facultyId)
       .eq('status', 'active')
+      .eq('is_published', true)
       .order('name');
 
     if (error) {
@@ -203,9 +205,31 @@ async function getCourses(req, res, next) {
       throw new ApiError(400, error.message);
     }
 
+    // Attach question counts from approved uploads
+    let coursesWithCount = data;
+    if (data && data.length > 0) {
+      const codes = data.map((c) => c.code).filter(Boolean);
+      const { data: uploadRows } = await supabaseAdmin
+        .from('user_uploads')
+        .select('course_code')
+        .in('course_code', codes)
+        .eq('upload_type', 'past_question')
+        .eq('status', 'approved');
+
+      const countMap = {};
+      (uploadRows || []).forEach((row) => {
+        countMap[row.course_code] = (countMap[row.course_code] || 0) + 1;
+      });
+
+      coursesWithCount = data.map((c) => ({
+        ...c,
+        question_count: countMap[c.code] || 0,
+      }));
+    }
+
     res.json({
       success: true,
-      data: data
+      data: coursesWithCount,
     });
   } catch (error) {
     next(error);
@@ -360,7 +384,7 @@ async function searchCourses(req, res, next) {
         )
       `)
       .eq('status', 'active')
-      .or(`code.ilike.%${q}%,title.ilike.%${q}%`);
+      .or(`code.ilike.%${q}%,title.ilike.%${q}%,course_code.ilike.%${q}%`);
 
     if (departmentId) {
       query = query.eq('department_id', departmentId);
@@ -380,13 +404,30 @@ async function searchCourses(req, res, next) {
     let filteredData = data;
     if (universityId) {
       filteredData = data.filter(
-        course => course.department?.faculty?.university_id === universityId
+        (course) => course.department?.faculty?.university_id === universityId
       );
+    }
+
+    // Attach question counts
+    if (filteredData.length > 0) {
+      const codes = filteredData.map((c) => c.code).filter(Boolean);
+      const { data: uploadRows } = await supabaseAdmin
+        .from('user_uploads')
+        .select('course_code')
+        .in('course_code', codes)
+        .eq('upload_type', 'past_question')
+        .eq('status', 'approved');
+
+      const countMap = {};
+      (uploadRows || []).forEach((row) => {
+        countMap[row.course_code] = (countMap[row.course_code] || 0) + 1;
+      });
+      filteredData = filteredData.map((c) => ({ ...c, question_count: countMap[c.code] || 0 }));
     }
 
     res.json({
       success: true,
-      data: filteredData
+      data: filteredData,
     });
   } catch (error) {
     next(error);
@@ -424,6 +465,67 @@ async function getLevels(req, res, next) {
   }
 }
 
+/**
+ * Get ALL courses for a university (for client-side caching + search)
+ */
+async function getUniversityCourses(req, res, next) {
+  try {
+    const { universityId } = req.params;
+
+    // Get all departments in this university via faculties
+    const { data: faculties } = await supabaseAdmin
+      .from('faculties')
+      .select('id')
+      .eq('university_id', universityId);
+
+    if (!faculties || faculties.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const { data: departments } = await supabaseAdmin
+      .from('departments')
+      .select('id')
+      .in('faculty_id', faculties.map((f) => f.id));
+
+    if (!departments || departments.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const deptIds = departments.map((d) => d.id);
+
+    const { data, error } = await supabaseAdmin
+      .from('courses')
+      .select('id, code, course_code, title, level, semester, credit_units, department_id')
+      .in('department_id', deptIds)
+      .eq('status', 'active')
+      .order('code');
+
+    if (error) throw new ApiError(400, error.message);
+
+    // Attach question counts
+    let result = data || [];
+    if (result.length > 0) {
+      const codes = result.map((c) => c.code).filter(Boolean);
+      const { data: uploadRows } = await supabaseAdmin
+        .from('user_uploads')
+        .select('course_code')
+        .in('course_code', codes)
+        .eq('upload_type', 'past_question')
+        .eq('status', 'approved');
+
+      const countMap = {};
+      (uploadRows || []).forEach((row) => {
+        countMap[row.course_code] = (countMap[row.course_code] || 0) + 1;
+      });
+      result = result.map((c) => ({ ...c, question_count: countMap[c.code] || 0 }));
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUniversities,
   getUniversity,
@@ -437,5 +539,6 @@ module.exports = {
   getSessions,
   getSettings,
   searchCourses,
-  getLevels
+  getLevels,
+  getUniversityCourses,
 };

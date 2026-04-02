@@ -1,5 +1,5 @@
 /**
- * PastQuest - Payment Routes
+ * Vectra - Payment Routes
  */
 
 const express = require('express');

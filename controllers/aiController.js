@@ -1,5 +1,5 @@
 /**
- * PastQuest/Vectra - AI Controller
+ * Vectra/Vectra - AI Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');

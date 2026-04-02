@@ -1,5 +1,5 @@
 /**
- * PastQuest - Question Routes
+ * Vectra - Question Routes
  */
 
 const express = require('express');

@@ -1,7 +1,7 @@
 {
-  "name": "pastquest-backend",
+  "name": "vectra-backend",
   "version": "1.0.0",
-  "description": "PastQuest Backend - Express.js API with Supabase for Past Questions Platform",
+  "description": "Vectra Backend - Express.js API with Supabase for Past Questions Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -18,14 +18,14 @@
     "test": "jest"
   },
   "keywords": [
-    "pastquest",
+    "vectra",
     "supabase",
     "past-questions",
     "education",
     "nigeria",
     "express"
   ],
-  "author": "PastQuest Team",
+  "author": "Vectra Team",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -41,7 +41,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "pdfkit": "^0.17.2",
-    "resend": "^2.0.0"
+    "resend": "^2.0.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "eslint": "^8.55.0",

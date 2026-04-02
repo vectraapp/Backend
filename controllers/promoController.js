@@ -1,5 +1,5 @@
 /**
- * PastQuest - Promo Code Controller
+ * Vectra - Promo Code Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');

@@ -1,5 +1,5 @@
 /**
- * PastQuest - Authentication Controller
+ * Vectra - Authentication Controller
  */
 
 const { supabase, supabaseAdmin } = require('../config/supabase');
@@ -8,7 +8,7 @@ const { ApiError } = require('../middleware/errorHandler');
 
 /**
  * Sign up with email and password
- * Uses admin client to create users with email already confirmed (no OTP required)
+ * Auto-confirms email via admin client — no OTP required
  */
 async function signUp(req, res, next) {
   try {
@@ -22,12 +22,12 @@ async function signUp(req, res, next) {
       throw new ApiError(400, 'You must accept the Terms of Service to create an account');
     }
 
-    // Create user using admin client with email already confirmed (bypasses email verification)
     const name = displayName || email.split('@')[0];
+
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email - no OTP/email verification needed
+      email_confirm: true,
       user_metadata: {
         full_name: name,
         name: name,
@@ -39,14 +39,15 @@ async function signUp(req, res, next) {
       throw new ApiError(400, createError.message);
     }
 
-    // Record terms acceptance in users table
-    await supabaseAdmin
-      .from('users')
-      .update({ terms_accepted_at: new Date().toISOString() })
-      .eq('id', userData.user.id)
-      .catch(() => {});
+    // Record terms acceptance (non-blocking)
+    try {
+      await supabaseAdmin
+        .from('users')
+        .update({ terms_accepted_at: new Date().toISOString() })
+        .eq('id', userData.user.id);
+    } catch (_) {}
 
-    // Now sign in the user to get a session
+    // Sign in to get a session
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -56,16 +57,97 @@ async function signUp(req, res, next) {
       throw new ApiError(400, signInError.message);
     }
 
-    // Send welcome email (optional, non-blocking)
-    sendWelcomeEmail(email, displayName).catch(console.error);
+    sendWelcomeEmail(email, name).catch(console.error);
 
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
       data: {
         user: signInData.user,
-        session: signInData.session
+        session: signInData.session,
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Verify OTP after signup
+ * User submits the 6-digit code from their email
+ */
+async function verifyOtp(req, res, next) {
+  try {
+    const { email, token } = req.body;
+
+    if (!email || !token) {
+      throw new ApiError(400, 'Email and verification code are required');
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup',
+    });
+
+    if (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    // Update last login
+    try {
+      await supabaseAdmin
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', data.user.id);
+    } catch (_) {}
+
+    // Get profile
+    const { data: profile } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(email, profile?.display_name).catch(console.error);
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      data: {
+        user: { ...data.user, profile },
+        session: data.session,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Resend OTP verification code
+ */
+async function resendVerification(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new ApiError(400, 'Email is required');
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+
+    if (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification code resent'
     });
   } catch (error) {
     next(error);
@@ -83,45 +165,22 @@ async function signIn(req, res, next) {
       throw new ApiError(400, 'Email and password are required');
     }
 
-    // First, try normal sign in
-    let { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-
-    // If "Email not confirmed" error, auto-confirm the user and retry
-    if (error && error.message.includes('Email not confirmed')) {
-      console.log('[Auth] Auto-confirming email for:', email);
-
-      // Get user by email and confirm them
-      const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-      const user = users?.users?.find(u => u.email === email);
-
-      if (user) {
-        // Update user to confirm email
-        await supabaseAdmin.auth.admin.updateUserById(user.id, {
-          email_confirm: true
-        });
-
-        // Retry sign in
-        const retryResult = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        data = retryResult.data;
-        error = retryResult.error;
-      }
-    }
 
     if (error) {
       throw new ApiError(401, error.message);
     }
 
     // Update last login
-    await supabaseAdmin
-      .from('users')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', data.user.id);
+    try {
+      await supabaseAdmin
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', data.user.id);
+    } catch (_) {}
 
     // Get user profile
     const { data: profile } = await supabaseAdmin
@@ -176,8 +235,6 @@ async function signInWithGoogle(req, res, next) {
 
 /**
  * Exchange Google ID token for a Supabase session (mobile flow)
- * The mobile app uses expo-auth-session to get the Google ID token,
- * then sends it here to get a Supabase session back.
  */
 async function exchangeGoogleToken(req, res, next) {
   try {
@@ -198,11 +255,12 @@ async function exchangeGoogleToken(req, res, next) {
     }
 
     // Update last login
-    await supabaseAdmin
-      .from('users')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', data.user.id)
-      .catch(() => {});
+    try {
+      await supabaseAdmin
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', data.user.id);
+    } catch (_) {}
 
     // Get user profile
     const { data: profile } = await supabaseAdmin
@@ -214,41 +272,9 @@ async function exchangeGoogleToken(req, res, next) {
     res.json({
       success: true,
       data: {
-        user: {
-          ...data.user,
-          profile,
-        },
+        user: { ...data.user, profile },
         session: data.session,
       }
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * Resend email verification link
- */
-async function resendVerification(req, res, next) {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      throw new ApiError(400, 'Email is required');
-    }
-
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-    });
-
-    if (error) {
-      throw new ApiError(400, error.message);
-    }
-
-    res.json({
-      success: true,
-      message: 'Verification email sent'
     });
   } catch (error) {
     next(error);
@@ -379,6 +405,7 @@ async function updatePassword(req, res, next) {
 
 module.exports = {
   signUp,
+  verifyOtp,
   signIn,
   signInWithGoogle,
   exchangeGoogleToken,

@@ -1,5 +1,5 @@
 /**
- * PastQuest - Admin Routes
+ * Vectra - Admin Routes
  */
 
 const express = require('express');

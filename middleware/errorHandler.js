@@ -1,5 +1,5 @@
 /**
- * PastQuest - Error Handler Middleware
+ * Vectra - Error Handler Middleware
  */
 
 /**

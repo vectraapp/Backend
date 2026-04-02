@@ -2,7 +2,7 @@
  * Vectra - Data Routes
  * Universities, Faculties, Departments, Courses, etc.
  *
- * All data routes are public (no authentication required).
+ * All data routes require authentication.
  *
  * FLAT URL patterns to match frontend API constants:
  *   /data/universities           → list published universities
@@ -19,6 +19,10 @@
 const express = require('express');
 const router = express.Router();
 const dataController = require('../controllers/dataController');
+const { authenticate } = require('../middleware/auth');
+
+// All data routes require authentication
+router.use(authenticate);
 
 // Universities
 router.get('/universities', dataController.getUniversities);
@@ -42,5 +46,6 @@ router.get('/courses/:departmentId', dataController.getCourses);
 router.get('/sessions', dataController.getSessions);
 router.get('/settings', dataController.getSettings);
 router.get('/search/courses', dataController.searchCourses);
+router.get('/universities/:universityId/courses', dataController.getUniversityCourses);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 /**
- * PastQuest - Authentication Middleware
+ * Vectra - Authentication Middleware
  */
 
 const { supabase, supabaseAdmin } = require('../config/supabase');

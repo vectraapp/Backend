@@ -6,13 +6,14 @@
 const { supabaseAdmin } = require('../config/supabase');
 const { ApiError } = require('../middleware/errorHandler');
 const cloudinary = require('../config/cloudinary');
+const { scanDocument } = require('../utils/documentScanner');
 const fs = require('fs');
 const path = require('path');
 
 /**
  * Upload a past question
  */
-async function uploadPastQuestion(req, res, next) {
+async function uploadVectraion(req, res, next) {
   try {
     const userId = req.user.id;
     const userEmail = req.user.email;
@@ -41,17 +42,28 @@ async function uploadPastQuestion(req, res, next) {
     const isImage = req.file.mimetype && req.file.mimetype.startsWith('image/');
     const detectedFileType = isImage ? 'image' : 'pdf';
 
-    // Admin auto-approval
-    const userRole = req.user.role || 'user';
+    // Admin auto-approval — admins never need approval
+    const userRole = req.user.profile?.role || req.user.role || 'user';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-    const autoApprove = isAdmin && admin_approved === 'true';
+    const autoApprove = isAdmin;
 
     let fileUrl = null;
     let filePublicId = null;
 
+    // Scan/enhance image documents before uploading (PDFs pass through unchanged)
+    let filePath = req.file.path;
+    if (isImage) {
+      try {
+        const { outputPath } = await scanDocument(filePath);
+        filePath = outputPath;
+      } catch (scanError) {
+        console.warn('[Scanner] Enhancement failed, using original:', scanError.message);
+      }
+    }
+
     try {
       // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      const result = await cloudinary.uploader.upload(filePath, {
         resource_type: isImage ? 'image' : 'raw',
         folder: `vectra/uploads/questions/${userId}`,
         public_id: `question_${Date.now()}`,
@@ -68,8 +80,8 @@ async function uploadPastQuestion(req, res, next) {
     }
 
     // Clean up temp file if uploaded to Cloudinary
-    if (filePublicId && req.file.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (filePublicId && filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
 
     // Create upload record
@@ -102,6 +114,17 @@ async function uploadPastQuestion(req, res, next) {
     if (error) {
       throw new ApiError(400, error.message);
     }
+
+    // Log upload activity
+    try {
+      await supabaseAdmin.from('admin_activity_logs').insert({
+        admin_id: userId,
+        action: 'user_upload',
+        target_type: 'upload',
+        target_id: data.id,
+        details: { upload_type: 'past_question', course_code, user_email: userEmail, auto_approved: autoApprove },
+      });
+    } catch (_) {}
 
     res.status(201).json({
       success: true,
@@ -144,6 +167,9 @@ async function uploadTextbook(req, res, next) {
     if (!req.file) {
       throw new ApiError(400, 'No file provided');
     }
+
+    const tbUserRole = req.user.profile?.role || req.user.role || 'user';
+    const tbIsAdmin = tbUserRole === 'admin' || tbUserRole === 'super_admin';
 
     let fileUrl = null;
     let filePublicId = null;
@@ -189,8 +215,9 @@ async function uploadTextbook(req, res, next) {
         file_public_id: filePublicId,
         file_type: req.file.mimetype && req.file.mimetype.startsWith('image/') ? 'image' : 'pdf',
         file_size: req.file.size,
-        status: 'pending',
-        visibility: 'private',
+        status: tbIsAdmin ? 'approved' : 'pending',
+        visibility: tbIsAdmin ? 'published' : 'private',
+        ...(tbIsAdmin && { published_by: userId, published_at: new Date().toISOString() }),
       })
       .select()
       .single();
@@ -201,7 +228,7 @@ async function uploadTextbook(req, res, next) {
 
     res.status(201).json({
       success: true,
-      message: 'Textbook uploaded successfully. It will be reviewed and published by our team.',
+      message: tbIsAdmin ? 'Textbook uploaded and published.' : 'Textbook uploaded successfully.',
       data,
     });
   } catch (error) {
@@ -369,18 +396,31 @@ async function approveUpload(req, res, next) {
       throw new ApiError(400, error.message);
     }
 
+    // Log admin activity
+    try {
+      await supabaseAdmin.from('admin_activity_logs').insert({
+        admin_id: adminId,
+        action: 'approve_upload',
+        target_type: 'upload',
+        target_id: upload.id,
+        details: { upload_type: upload.upload_type, course_code: upload.course_code, user_email: upload.user_email },
+      });
+    } catch (_) {}
+
     // Create notification for uploader
-    await supabaseAdmin.from('notifications').insert({
-      user_id: upload.user_id,
-      type: 'upload_approved',
-      title: 'Upload Approved',
-      body: `Your ${upload.upload_type === 'past_question' ? 'past question' : 'textbook'} for ${upload.course_code} has been approved!`,
-      data: {
-        upload_id: upload.id,
-        upload_type: upload.upload_type,
-        course_code: upload.course_code,
-      },
-    });
+    try {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: upload.user_id,
+        type: 'upload_approved',
+        title: 'Upload Approved',
+        body: `Your ${upload.upload_type === 'past_question' ? 'past question' : 'textbook'} for ${upload.course_code} has been approved!`,
+        data: {
+          upload_id: upload.id,
+          upload_type: upload.upload_type,
+          course_code: upload.course_code,
+        },
+      });
+    } catch (_) {}
 
     res.json({
       success: true,
@@ -438,19 +478,32 @@ async function rejectUpload(req, res, next) {
       throw new ApiError(400, error.message);
     }
 
+    // Log admin activity
+    try {
+      await supabaseAdmin.from('admin_activity_logs').insert({
+        admin_id: adminId,
+        action: 'reject_upload',
+        target_type: 'upload',
+        target_id: upload.id,
+        details: { upload_type: upload.upload_type, course_code: upload.course_code, user_email: upload.user_email, rejection_reason },
+      });
+    } catch (_) {}
+
     // Create notification for uploader
-    await supabaseAdmin.from('notifications').insert({
-      user_id: upload.user_id,
-      type: 'upload_rejected',
-      title: 'Upload Rejected',
-      body: `Your ${upload.upload_type === 'past_question' ? 'past question' : 'textbook'} for ${upload.course_code} was not approved.`,
-      data: {
-        upload_id: upload.id,
-        upload_type: upload.upload_type,
-        course_code: upload.course_code,
-        rejection_reason,
-      },
-    });
+    try {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: upload.user_id,
+        type: 'upload_rejected',
+        title: 'Upload Rejected',
+        body: `Your ${upload.upload_type === 'past_question' ? 'past question' : 'textbook'} for ${upload.course_code} was not approved.`,
+        data: {
+          upload_id: upload.id,
+          upload_type: upload.upload_type,
+          course_code: upload.course_code,
+          rejection_reason,
+        },
+      });
+    } catch (_) {}
 
     res.json({
       success: true,
@@ -546,8 +599,83 @@ async function getPublishedUploads(req, res, next) {
   }
 }
 
+/**
+ * Get all uploads (Admin only) — all statuses, optional upload_type filter
+ */
+async function getAllUploads(req, res, next) {
+  try {
+    const { page = 1, limit = 50, upload_type, status } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = supabaseAdmin
+      .from('user_uploads')
+      .select('*', { count: 'exact' });
+
+    if (upload_type) query = query.eq('upload_type', upload_type);
+    if (status) query = query.eq('status', status);
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
+
+    if (error) throw new ApiError(400, error.message);
+
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count,
+        pages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Delete an upload (Admin only)
+ */
+async function deleteUpload(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const { data: upload, error: fetchError } = await supabaseAdmin
+      .from('user_uploads')
+      .select('file_public_id, file_type')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !upload) {
+      throw new ApiError(404, 'Upload not found');
+    }
+
+    // Delete from Cloudinary if we have a public_id
+    if (upload.file_public_id) {
+      try {
+        await cloudinary.uploader.destroy(upload.file_public_id, {
+          resource_type: upload.file_type === 'image' ? 'image' : 'raw',
+        });
+      } catch (_) {}
+    }
+
+    const { error } = await supabaseAdmin
+      .from('user_uploads')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new ApiError(400, error.message);
+
+    res.json({ success: true, message: 'Upload deleted' });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
-  uploadPastQuestion,
+  uploadVectraion,
   uploadTextbook,
   getMyUploads,
   getUpload,
@@ -556,4 +684,6 @@ module.exports = {
   approveUpload,
   rejectUpload,
   getUploadStats,
+  getAllUploads,
+  deleteUpload,
 };

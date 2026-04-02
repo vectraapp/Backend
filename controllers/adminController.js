@@ -1,5 +1,5 @@
 /**
- * PastQuest - Admin Controller
+ * Vectra - Admin Controller
  */
 
 const { supabaseAdmin } = require('../config/supabase');

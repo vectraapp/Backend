@@ -1,5 +1,5 @@
 /**
- * PastQuest - Email Utility Functions
+ * Vectra - Email Utility Functions
  */
 
 const { Resend } = require('resend');
@@ -8,7 +8,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'PastQuest <noreply@pastquest.ng>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Vectra <noreply@pastquest.ng>';
 
 /**
  * Send an email
@@ -44,7 +44,7 @@ async function sendEmail({ to, subject, html, text }) {
 async function sendWelcomeEmail(email, displayName) {
   return sendEmail({
     to: email,
-    subject: 'Welcome to PastQuest!',
+    subject: 'Welcome to Vectra!',
     html: `
       <!DOCTYPE html>
       <html>
@@ -60,11 +60,11 @@ async function sendWelcomeEmail(email, displayName) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to PastQuest!</h1>
+              <h1>Welcome to Vectra!</h1>
             </div>
             <div class="content">
               <p>Hi ${displayName || 'there'},</p>
-              <p>Thank you for joining PastQuest! We're excited to help you access quality past questions for your studies.</p>
+              <p>Thank you for joining Vectra! We're excited to help you access quality past questions for your studies.</p>
               <p>Here's what you can do:</p>
               <ul>
                 <li>Browse past questions by department and level</li>
@@ -75,7 +75,7 @@ async function sendWelcomeEmail(email, displayName) {
               <p>Happy studying!</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 PastQuest. All rights reserved.</p>
+              <p>&copy; 2024 Vectra. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -96,7 +96,7 @@ async function sendPaymentConfirmation(email, subscription) {
 
   return sendEmail({
     to: email,
-    subject: 'Payment Successful - PastQuest',
+    subject: 'Payment Successful - Vectra',
     html: `
       <!DOCTYPE html>
       <html>
@@ -128,7 +128,7 @@ async function sendPaymentConfirmation(email, subscription) {
               <p>You now have full access to all past questions in your subscription. Happy studying!</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 PastQuest. All rights reserved.</p>
+              <p>&copy; 2024 Vectra. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -171,7 +171,7 @@ async function sendQuestionApproved(email, { courseCode, points, earnings }) {
               <p>Keep contributing quality past questions to earn more!</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 PastQuest. All rights reserved.</p>
+              <p>&copy; 2024 Vectra. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -186,7 +186,7 @@ async function sendQuestionApproved(email, { courseCode, points, earnings }) {
 async function sendQuestionRejected(email, { courseCode, reason }) {
   return sendEmail({
     to: email,
-    subject: 'Question Not Approved - PastQuest',
+    subject: 'Question Not Approved - Vectra',
     html: `
       <!DOCTYPE html>
       <html>
@@ -213,7 +213,7 @@ async function sendQuestionRejected(email, { courseCode, reason }) {
               <p>Please review the feedback and try uploading again with the necessary corrections.</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 PastQuest. All rights reserved.</p>
+              <p>&copy; 2024 Vectra. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -228,7 +228,7 @@ async function sendQuestionRejected(email, { courseCode, reason }) {
 async function sendWithdrawalProcessed(email, { amount, accountName, bankName }) {
   return sendEmail({
     to: email,
-    subject: 'Withdrawal Processed - PastQuest',
+    subject: 'Withdrawal Processed - Vectra',
     html: `
       <!DOCTYPE html>
       <html>
@@ -255,10 +255,10 @@ async function sendWithdrawalProcessed(email, { amount, accountName, bankName })
                 <p><strong>Bank:</strong> ${bankName}</p>
               </div>
               <p>The funds should reflect in your account within 1-3 business days.</p>
-              <p>Thank you for contributing to PastQuest!</p>
+              <p>Thank you for contributing to Vectra!</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 PastQuest. All rights reserved.</p>
+              <p>&copy; 2024 Vectra. All rights reserved.</p>
             </div>
           </div>
         </body>
